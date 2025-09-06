@@ -1,0 +1,132 @@
+openapi: 3.0.3
+info:
+  title: Subscriptions API
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8080
+paths:
+  /v1/health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: ok
+  /v1/subscriptions:
+    get:
+      summary: List subscriptions
+      parameters:
+        - in: query
+          name: user_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: service_name
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: offset
+          schema: { type: integer, minimum: 0 }
+      responses:
+        '200':
+          description: List
+    post:
+      summary: Create subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionCreate'
+      responses:
+        '201':
+          description: Created
+  /v1/subscriptions/{id}:
+    get:
+      summary: Get by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+        '404': { description: Not found }
+    put:
+      summary: Update by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionUpdate'
+      responses:
+        '200': { description: Updated }
+        '404': { description: Not found }
+    delete:
+      summary: Delete by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: Deleted }
+  /v1/subscriptions/summary:
+    get:
+      summary: Total price for period
+      description: |
+        Считает суммарную стоимость подписок в рублях за выбранный период (включительно).
+        Параметры `from`/`to` принимают строки в формате `MM-YYYY`.
+      parameters:
+        - in: query
+          name: from
+          required: true
+          schema: { type: string, pattern: '^[0-1][0-9]-[0-9]{4}$' }
+        - in: query
+          name: to
+          required: true
+          schema: { type: string, pattern: '^[0-1][0-9]-[0-9]{4}$' }
+        - in: query
+          name: user_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: service_name
+          schema: { type: string }
+      responses:
+        '200':
+          description: Sum
+components:
+  schemas:
+    Subscription:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        service_name: { type: string }
+        price: { type: integer, minimum: 0 }
+        user_id: { type: string, format: uuid }
+        start_date: { type: string, example: "07-2025" }
+        end_date: { type: string, nullable: true, example: "09-2025" }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    SubscriptionCreate:
+      type: object
+      required: [service_name, price, user_id, start_date]
+      properties:
+        service_name: { type: string }
+        price: { type: integer, minimum: 0 }
+        user_id: { type: string, format: uuid }
+        start_date: { type: string, example: "07-2025" }
+        end_date: { type: string, nullable: true, example: "09-2025" }
+    SubscriptionUpdate:
+      type: object
+      properties:
+        service_name: { type: string }
+        price: { type: integer, minimum: 0 }
+        start_date: { type: string, example: "07-2025" }
+        end_date: { type: string, nullable: true, example: "09-2025" }
